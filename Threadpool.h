@@ -33,10 +33,19 @@ private:
     std::queue<std::function<void()>> task_q;
 };
 
+/* 
+    Constructor of Threadpool. Size is the amount of working thread.
+    Each worker will acquire and execute tasks automatically, until
+    the threadpool stop (the destructor be called).
+ */
 Threadpool::Threadpool(size_t size) : stop(false)
 {
     for (size_t i = 0; i < size; i++)
     {
+        /* 
+            the thread function. Wait for notification and fetch tasks to 
+            execute.
+         */
         thread_v.emplace_back([this]()
                               {
                                   while (1)
@@ -44,10 +53,27 @@ Threadpool::Threadpool(size_t size) : stop(false)
                                       std::function<void()> task;
                                       {
                                           std::unique_lock<std::mutex> lock(this->mtx);
+
+                                          /* 
+                                            Logically equilavent to
+                                            
+                                            while (!this->stopped() && this->empty())
+                                                cv.wait(lock)
+                                            if (this->stopped() && this->empty())
+                                                return;
+                                            
+                                            The worker thread will be blocked until it is 
+                                            notified AND the predication, this->stopped || 
+                                            !this->empty() is TRUE (the pool still has 
+                                            tasks or stop). 
+                                            It will exit when the pool stop AND the all 
+                                            tasks is done.
+                                           */
                                           cv.wait(lock, [this]()
                                                   { return this->stopped() || !this->empty(); });
                                           if (this->stopped() && this->empty())
                                               return;
+
                                           task = this->task_q.front();
                                           this->task_q.pop();
                                       }
@@ -57,6 +83,9 @@ Threadpool::Threadpool(size_t size) : stop(false)
     }
 }
 
+/* 
+    Destructor of Threadpool
+ */
 Threadpool::~Threadpool()
 {
     {
@@ -68,6 +97,10 @@ Threadpool::~Threadpool()
         thread_v[i].join();
 }
 
+/* 
+    Push method of Threadpool. Returns a future of type F(Args).
+    You can get the result by future->get() method.
+ */
 template <class F, class... Args>
 std::future<typename std::result_of<F(Args...)>::type> Threadpool::push(F &&f, Args &&...args)
 {
