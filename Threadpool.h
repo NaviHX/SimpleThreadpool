@@ -67,7 +67,7 @@ Threadpool::Threadpool(size_t size) : stop(false)
                                             !this->empty() is TRUE (the pool still has 
                                             tasks or stop). 
                                             It will exit when the pool stop AND the all 
-                                            tasks is done.
+                                            tasks are done.
                                            */
                                           cv.wait(lock, [this]()
                                                   { return this->stopped() || !this->empty(); });
