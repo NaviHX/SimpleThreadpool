@@ -22,7 +22,7 @@ public:
     bool stopped() { return stop; }
 
     template <class F, class... Args>
-    std::future<typename std::result_of<F(Args...)>::type> push(F &&f, Args&&... args);
+    auto push(F &&f, Args &&...args) -> std::future<decltype(f(args...))>;
 
 private:
     bool stop;
@@ -102,9 +102,9 @@ Threadpool::~Threadpool()
     You can get the result by future->get() method.
  */
 template <class F, class... Args>
-std::future<typename std::result_of<F(Args...)>::type> Threadpool::push(F &&f, Args &&...args)
+auto Threadpool::push(F &&f, Args &&...args) -> std::future<decltype(f(args...))>
 {
-    using ret_type = typename std::result_of<F(Args...)>::type;
+    using ret_type = decltype(f(args...));
     auto taskp = std::make_shared<std::packaged_task<ret_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<ret_type> ret = taskp->get_future();
 
