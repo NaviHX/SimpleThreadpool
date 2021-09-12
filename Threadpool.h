@@ -40,6 +40,8 @@ private:
  */
 Threadpool::Threadpool(size_t size) : stop(false)
 {
+    if(size<1)
+        throw std::runtime_error("Cannot construct a threadpool with no threads");
     for (size_t i = 0; i < size; i++)
     {
         /* 
