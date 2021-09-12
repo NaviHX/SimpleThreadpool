@@ -66,7 +66,7 @@ Threadpool::Threadpool(size_t size) : stop(false)
                                             notified AND the predication, this->stopped || 
                                             !this->empty() is TRUE (the pool still has 
                                             tasks or stop). 
-                                            It will exit when the pool stop AND the all 
+                                            It will exit when the pool stops AND the all 
                                             tasks are done.
                                            */
                                           cv.wait(lock, [this]()
