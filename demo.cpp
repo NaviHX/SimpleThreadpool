@@ -10,14 +10,16 @@ int main()
     std::vector<std::future<int>> results;
     for (size_t i = 0; i < 4; i++)
     {
-        results.push_back(tp.push([](int i)
-                                  { std::this_thread::sleep_for(std::chrono::seconds(i)); return i; },
-                                  i));
+        results.push_back(tp.push([i]()
+                                  {
+                                      std::this_thread::sleep_for(std::chrono::seconds(i));
+                                      return (int)i;
+                                  }));
     }
     for (size_t i = 0; i < 4; i++)
     {
         auto r = results[i].get();
-        std::cout << "func " << r << " return" << std::endl;
+        std::cout << "func " << r << " return " << r << std::endl;
     }
     return 0;
 }
